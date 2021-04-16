@@ -37,8 +37,9 @@ class GameUtilities : MonoBehaviour
 
     public static bool CheckUintMultiplyOverflow(uint x, uint y)
     {
-        long value = 0;
+        ulong value = 0;
 
+        // value maximum = 2^64 - 2,  ulong maximum 2^64 - 1
         value = (long) x * (long) y;
 
         if(value > uint.MaxValue)
