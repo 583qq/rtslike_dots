@@ -4,8 +4,8 @@ using Unity.Entities;
 
 public class BuildingConstructionSystem : SystemBase
 {
-    private double NextWorkUpdate = 0.0f;
-    private double WorkUpdateRate = 1.0f;
+    private double nextWorkUpdate = 0.0f;
+    private double workUpdateRate = 1.0f;
 
     protected override void OnCreate()
     {
@@ -17,27 +17,26 @@ public class BuildingConstructionSystem : SystemBase
         // Remove Construction Component with isDone
         // Or not?
 
-        double current_time = World.Time.ElapsedTime;
+        double currentTime = World.Time.ElapsedTime;
 
-        if(NextWorkUpdate < current_time)
+        if(nextWorkUpdate < currentTime)
         {
         // One second later
-        NextWorkUpdate = current_time + WorkUpdateRate;
+        nextWorkUpdate = currentTime + workUpdateRate;
 
         // +1 to work completion
         Entities
-        .WithAll<BuildingConstructionComponent>()
         .ForEach(
-            // writeable component
-            (ref BuildingConstructionComponent c) =>
+            // Writeable component
+            (ref BuildingConstructionComponent construction) =>
             {
-                if(c.workCurrent == c.workToComplete)
-                    c.isDone = true;
+                if(construction.workCurrent == construction.workToComplete)
+                    construction.isDone = true;
                 
-                if(c.isDone)
+                if(construction.isDone)
                     return;
             
-                c.workCurrent += 1;
+                construction.workCurrent += 1;
             }
         ).ScheduleParallel();
         }
