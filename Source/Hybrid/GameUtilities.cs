@@ -39,7 +39,9 @@ class GameUtilities : MonoBehaviour
     {
         ulong value = 0;
 
-        // value maximum = 2^64 - 2,  ulong maximum 2^64 - 1
+        // value maximum = (2^32 - 1)^2,  ulong maximum 2^64 - 1
+        // (2^32 - 1)(2^32 - 1) < 2^64 - 1  => True
+        
         value = (ulong) x * (ulong) y;
 
         if(value > uint.MaxValue)
