@@ -1,10 +1,5 @@
 Unity DOTS test project
 
-This is asset folder.
-Project folder contains SLN & settings.
-
-Will fix repo later.
-
 Features:
 1. New Input System
 2. Basic Camera control (Movement, FOV. MapBoundaries)
