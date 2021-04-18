@@ -4,6 +4,5 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
-
-public struct PrefabTag : IComponentData {}
-public struct SelectableTag : IComponentData {}
+[GenerateAuthoringComponent]
+public struct SelectionBoxTag : IComponentData {}

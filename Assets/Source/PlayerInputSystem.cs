@@ -100,7 +100,7 @@ public class PlayerInputSystem : SystemBase
     // ...
     private void LogNotFound(string components)
     {
-        Debug.Log($"[ERROR]: NO ENTITIES WITH {components} COMPONENT DETECTED.");
+        Debug.Log($"[ERROR]: NO ENTITIES WITH {components} COMPONENT WERE DETECTED.");
     }
 
     private void InitializePlayerView()
