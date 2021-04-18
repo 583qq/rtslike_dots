@@ -4,7 +4,7 @@ Features:
 1. New Input System
 2. Basic Camera control (Movement, FOV. MapBoundaries)
 3. Building System (Gameobject prefab conversion)
-4. Construction System (Changing construction)
+4. Construction Progress System (Changing construction progress)
 5. Unit Selection (Basic)
 
 To-do:
