@@ -5,24 +5,6 @@ using UnityEngine.InputSystem;
 
 class GameUtilities : MonoBehaviour
 {
-    
-    /*
-    private void ActorSelection()
-    {
-        RaycastHit[] _hits = Physics.BoxCastAll(dragCenter, dragSize, Vector3.up, Quaternion.identity, 0, actorLayer.value);
-
-        foreach(RaycastHit hit in hits)
-        {
-            if(hit.collider.TryGetComponent(out Actor actor))
-            {
-                selectedActors.Add(actor);
-                actor.visualHandler.Select();
-            }
-        }
-
-    }
-    */
-
     public static bool CheckUintSumOverflow(uint x, uint y)
     {
         long value = 0;
@@ -62,9 +44,6 @@ class GameUtilities : MonoBehaviour
         if(Physics.Raycast(Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue()), out RaycastHit info, 500, layerMask))
             position = info.point;
 
-        // Debug.Log($"[Utils] MousePos: {Mouse.current.position.ReadValue()}");
-        // Debug.Log($"[Utils] TerrainPOS: {position}");
-
         return position;
     }
 
@@ -80,7 +59,4 @@ class GameUtilities : MonoBehaviour
 
         return position;
     }
-
-
-
 }

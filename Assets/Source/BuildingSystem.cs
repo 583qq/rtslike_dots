@@ -9,8 +9,8 @@ using Unity.Transforms;
 using Unity.Physics;
 using Unity.Rendering;
 
-using UnityEngine.InputSystem;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class BuildingSystem : SystemBase
 {
@@ -38,9 +38,7 @@ public class BuildingSystem : SystemBase
 
         task = EntityManager.GetComponentData<ConstructionTask>(notify);
 
-        #if UNITY_EDITOR
-        EntityManager.SetName(notify, "TaskNotify");
-        #endif
+        EntityManager.DestroyEntity(notify);
     }
 
     protected override void OnStartRunning()
@@ -54,24 +52,16 @@ public class BuildingSystem : SystemBase
             EntityManager.DestroyEntity(prefabSelectedNotify);
     }
 
+    private void RenderPreview()
+    {
+
+    }
+
     protected override void OnUpdate()
     {
         Vector3 position = GameUtilities.MouseToTerrainPosition();
 
-        //
-        // Entity previewPrefab = task.previewPrefab;
-        //
-
-        // RenderMesh render = EntityManager.GetSharedComponentData<RenderMesh>(task.previewPrefab);
-
-        // Draw our preview mesh in the current frame. To-do: Colors/Post-effects for preview 
-
-        // Graphics.DrawMesh(render.mesh, position, Quaternion.identity, render.material, 0);
-
-        // If left button isPressed
-        // Check If UI was hit
-        // this.Enabled = false;
-        // return;
+        RenderPreview();
 
         if(Mouse.current.leftButton.IsPressed()) // LMouseClick
         {

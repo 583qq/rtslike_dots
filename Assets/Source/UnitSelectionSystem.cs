@@ -7,6 +7,8 @@ using Unity.Rendering;
 
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
+
 
 public struct BoxSelectArea : IComponentData
 {
@@ -16,10 +18,14 @@ public struct BoxSelectArea : IComponentData
 
 public class UnitSelectionSystem : SystemBase
 {
+    private bool areAnySelected = false;
     private bool mousePressed;
     private bool mouseReleased;
     private Vector2 screenStartPosition;
     private Vector2 screenEndPosition;
+
+    private float selectionDistanceMinimum = 2.0f;
+    private float selectionDistanceMinimumSqr;
 
     private float3 bottomLeft;
     private float3 topRight;
@@ -31,6 +37,8 @@ public class UnitSelectionSystem : SystemBase
 
     protected override void OnStartRunning()
     {
+        selectionDistanceMinimumSqr = selectionDistanceMinimum * selectionDistanceMinimum;
+
         var boxQuery = GetEntityQuery(typeof(SelectionBoxTag), typeof(RectTransform));
 
         if(boxQuery.IsEmpty)
@@ -38,7 +46,6 @@ public class UnitSelectionSystem : SystemBase
             Debug.Log("Can't find entity with SelectionBoxTag component.");
             return;
         }
-
 
         var boxEntity = boxQuery.ToEntityArray(Allocator.Temp)[0];
 
@@ -55,6 +62,11 @@ public class UnitSelectionSystem : SystemBase
 
     protected override void OnUpdate()
     {
+        // If you are over UI elements you can't select
+        if(EventSystem.current.IsPointerOverGameObject())
+            return;
+        
+        // UI SelectionArea
         if(Mouse.current.leftButton.IsPressed())
         {
             UpdateBoxSelectionArea();
@@ -63,18 +75,43 @@ public class UnitSelectionSystem : SystemBase
         if(Mouse.current.leftButton.wasReleasedThisFrame)
             mouseReleased = true;
 
+        // Selection Logic
         if(mouseReleased)
         {
             boxTransform.sizeDelta = new Vector2(0, 0);
             mousePressed = false;
             mouseReleased = false;
 
-            // Check if distance is small
-            // Set our default rectangle
+            #region Click-like selection
+            // Vector created with two points
+            Vector3 distVector = (Vector3) bottomLeft - (Vector3) topRight;
+
+            float distance = distVector.magnitude;
+
+            if(distance <= selectionDistanceMinimum)
+            {
+                Vector3 midPoint = distVector / 2;
+
+                bottomLeft += new float3(-1, 0, -1) * (selectionDistanceMinimum - distance) / 2;
+                topRight += new float3(1, 0, 1) * (selectionDistanceMinimum - distance) / 2;
+            }
+            #endregion
+
 
             Debug.Log($"Trying to select: {bottomLeft} => {topRight}");
             HandleUnitSelection(bottomLeft, topRight);
         }
+
+        // Deselection Logic
+        if(areAnySelected && Mouse.current.rightButton.IsPressed())
+            Deselect();
+    }
+
+    private void Deselect()
+    {
+        areAnySelected = false;
+
+        // Deselection Logic
     }
 
     private void UpdateBoxSelectionArea()
@@ -88,8 +125,10 @@ public class UnitSelectionSystem : SystemBase
         screenEndPosition = Mouse.current.position.ReadValue();
 
         // World space position floats
-        float3 startPosition = (float3) view.ScreenToWorldPoint(new Vector3(screenStartPosition.x, screenStartPosition.y, view.transform.position.y));
-        float3 endPosition =  (float3) view.ScreenToWorldPoint(new Vector3(screenEndPosition.x, screenEndPosition.y, view.transform.position.y));
+        float3 startPosition = (float3) view.ScreenToWorldPoint(new Vector3(screenStartPosition.x, 
+                                                 screenStartPosition.y, view.transform.position.y));
+        float3 endPosition =  (float3) view.ScreenToWorldPoint(new Vector3(screenEndPosition.x, 
+                                                 screenEndPosition.y, view.transform.position.y));
 
         // Box Transform 'anchors'
         Vector2 screenMinAnchor = new Vector2(math.min(screenStartPosition.x, screenEndPosition.x), 
@@ -107,23 +146,24 @@ public class UnitSelectionSystem : SystemBase
 
 
         boxTransform.position = screenMinAnchor;
-        boxTransform.sizeDelta = new Vector2(screenMaxAnchor.x - screenMinAnchor.x, screenMaxAnchor.y - screenMinAnchor.y);
+        boxTransform.sizeDelta = new Vector2(screenMaxAnchor.x - screenMinAnchor.x, 
+                                             screenMaxAnchor.y - screenMinAnchor.y);
     }
 
-    private void HandleUnitSelection(float3 bottom_left, float3 top_right)
+    private void HandleUnitSelection(float3 minAnchor, float3 maxAnchor)
     {
         Entities
                 .WithAll<SelectableTag>()
                 .ForEach(
-                    (Entity entity, ref Translation translation) =>
+                    (Entity entity, in Translation translation) =>
                     {
                         float3 position = translation.Value;
 
-                        if(position.x >= bottom_left.x &&
-                           position.z >= bottom_left.z &&
-                           position.x <= top_right.x &&
-                           position.z <= top_right.z)
-                           {
+                        if(position.x >= minAnchor.x &&
+                           position.z >= minAnchor.z &&
+                           position.x <= maxAnchor.x &&
+                           position.z <= maxAnchor.z)
+                           {                               
                                Debug.Log($"Selected: {entity} ({position})");
                                // Add selected entities into native array?
                                // Or add selected component?

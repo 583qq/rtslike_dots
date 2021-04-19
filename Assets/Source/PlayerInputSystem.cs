@@ -115,9 +115,9 @@ public class PlayerInputSystem : SystemBase
             return;
         }
 
-        var entitiesWithPlayerView = playerViewQuery.ToEntityArray(Allocator.Temp);
+        var playerViewEntities = playerViewQuery.ToEntityArray(Allocator.Temp);
         
-        var playerViewEntity = entitiesWithPlayerView[0]; // Get first (anyway it's only one atm)
+        var playerViewEntity = playerViewEntities[0]; // Get first (anyway it's only one atm)
         
         #endregion
 

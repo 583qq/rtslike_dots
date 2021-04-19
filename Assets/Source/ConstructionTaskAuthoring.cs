@@ -58,6 +58,7 @@ public class ConstructionTaskAuthoring : MonoBehaviour, IConvertGameObjectToEnti
         referencedPrefabs.Add(previewPrefab);
         Debug.Log($"Added referenced prefabs: {buildingPrefab} & {previewPrefab}");
     }
+    
     public void Construction()
     {
         if(!isConverted)
