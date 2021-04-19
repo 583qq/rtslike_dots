@@ -23,8 +23,10 @@ public class ConstructionTaskAuthoring : MonoBehaviour, IConvertGameObjectToEnti
     // Authoring Script
     private World world;
     private EntityManager manager;
-    private Entity task_entity;
-    private UnitPriceData priceData;    // WIP
+    private Entity taskEntity;
+
+    [SerializeField] private UnitPriceData[] prices;
+
     private bool isConverted = false;
 
     void Start()
@@ -49,7 +51,7 @@ public class ConstructionTaskAuthoring : MonoBehaviour, IConvertGameObjectToEnti
 
         isConverted = true;
 
-        task_entity = entity;
+        taskEntity = entity;
     }
 
     public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
@@ -64,18 +66,27 @@ public class ConstructionTaskAuthoring : MonoBehaviour, IConvertGameObjectToEnti
         if(!isConverted)
             return;
 
-        // 
-        // To-do
-        // Если есть UnitPriceData
-        // Проверяем, хватает ли нам ресурсов
-        // Если нет => return отсюда нафиг.
-        //
+        
+        foreach(var price in prices)
+        {
+            var price_entity = manager.CreateEntity();
+            manager.AddComponentData<EntityReference>(price_entity, new EntityReference
+            {
+                reference = taskEntity
+            });
 
-        Debug.Log($"Construction Task Notify: {task_entity}");
+            manager.AddComponentData<PriceData>(price_entity, new PriceData
+            {
+                ResourceType = price.type,
+                Price = price.price
+            });
+        }
+
+        Debug.Log($"Construction Task Notify: {taskEntity}");
 
         var notify = manager.CreateEntity(typeof(ConstructionTaskNotify));
         manager.AddComponentData<ConstructionTaskNotify>(notify, new ConstructionTaskNotify
-        { task = task_entity });
+        { task = taskEntity });
     }
 }
 
@@ -86,4 +97,16 @@ public struct ConstructionTask : IComponentData
     public bool isAttackable;
     public uint constructionTime;
     public uint durability;
+}
+
+[System.Serializable]
+public struct UnitPriceData 
+{
+    public ResourceTypes type;
+    public uint price;
+}
+
+public struct EntityReference : IComponentData
+{
+    public Entity reference;
 }

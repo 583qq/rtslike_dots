@@ -10,12 +10,6 @@ using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 
 
-public struct BoxSelectArea : IComponentData
-{
-    public float x, y; // point
-    public float width, height;
-}
-
 public class UnitSelectionSystem : SystemBase
 {
     private bool areAnySelected = false;
@@ -33,6 +27,8 @@ public class UnitSelectionSystem : SystemBase
     private RectTransform boxTransform;
 
     private Camera view;
+    private Mouse mouse;
+    private EventSystem eventSystem;
 
 
     protected override void OnStartRunning()
@@ -51,9 +47,9 @@ public class UnitSelectionSystem : SystemBase
 
         boxTransform = EntityManager.GetComponentObject<RectTransform>(boxEntity);
 
-        Debug.Log($"Selection Rect: {boxTransform.rect}");
-
         view = Camera.main;
+        mouse = Mouse.current;
+        eventSystem = EventSystem.current;
     }
 
     protected override void OnStopRunning()
@@ -63,16 +59,16 @@ public class UnitSelectionSystem : SystemBase
     protected override void OnUpdate()
     {
         // If you are over UI elements you can't select
-        if(EventSystem.current.IsPointerOverGameObject())
+        if(eventSystem.IsPointerOverGameObject())
             return;
         
         // UI SelectionArea
-        if(Mouse.current.leftButton.IsPressed())
+        if(mouse.leftButton.IsPressed())
         {
             UpdateBoxSelectionArea();
         }
 
-        if(Mouse.current.leftButton.wasReleasedThisFrame)
+        if(mouse.leftButton.wasReleasedThisFrame)
             mouseReleased = true;
 
         // Selection Logic
@@ -90,8 +86,6 @@ public class UnitSelectionSystem : SystemBase
 
             if(distance <= selectionDistanceMinimum)
             {
-                Vector3 midPoint = distVector / 2;
-
                 bottomLeft += new float3(-1, 0, -1) * (selectionDistanceMinimum - distance) / 2;
                 topRight += new float3(1, 0, 1) * (selectionDistanceMinimum - distance) / 2;
             }
@@ -103,7 +97,7 @@ public class UnitSelectionSystem : SystemBase
         }
 
         // Deselection Logic
-        if(areAnySelected && Mouse.current.rightButton.IsPressed())
+        if(areAnySelected && mouse.rightButton.IsPressed())
             Deselect();
     }
 
@@ -118,11 +112,11 @@ public class UnitSelectionSystem : SystemBase
     {
         if(!mousePressed)
         {
-            screenStartPosition = Mouse.current.position.ReadValue();
+            screenStartPosition = mouse.position.ReadValue();
             mousePressed = true;
         }
 
-        screenEndPosition = Mouse.current.position.ReadValue();
+        screenEndPosition = mouse.position.ReadValue();
 
         // World space position floats
         float3 startPosition = (float3) view.ScreenToWorldPoint(new Vector3(screenStartPosition.x, 
