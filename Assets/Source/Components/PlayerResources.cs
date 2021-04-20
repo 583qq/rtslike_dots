@@ -3,16 +3,21 @@ using Unity.Entities;
 
 public enum ResourceTypes
 {
+    None,
     Gold,
     Wood,
     Iron,
     Crystal   
 }
 
-public struct PlayerData : IComponentData
+[InternalBufferCapacity(4)]
+public struct PlayerResourceData : IBufferElementData
 {
-    public int Gold;
-    public int Wood;
-    public int Iron;
-    public int Crystal;
+    public ResourceData resource;
+}
+
+public struct ResourceData
+{
+    public ResourceTypes type;
+    public int value;
 }

@@ -19,23 +19,51 @@ public class PlayerResourceSystem : SystemBase
     private Entity player;
     
     // UI text fields references
-    private Dictionary<ResourceTypes, Text> resources;
+    public Dictionary<ResourceTypes, Text> resources;
+    
 
-    private bool startValueSet = false;
+    // private bool startValueSet = false;
 
     protected override void OnCreate()
     {
         // Initialize our player data
         player = EntityManager.CreateEntity();
-        resources = new Dictionary<ResourceTypes, Text>();
 
-        // Eternal damnation
-        EntityManager.AddComponentData<PlayerData>(player, new PlayerData {
-            Gold = startResourceValue,
-            Wood = startResourceValue,
-            Iron = startResourceValue,
-            Crystal = startResourceValue
-        });
+        resources = new Dictionary<ResourceTypes, Text>();  // UI textfield mapping
+
+        DynamicBuffer<PlayerResourceData> playerResources = EntityManager.AddBuffer<PlayerResourceData>(player);
+
+        #region Initializate player resources (buffer)
+        
+        playerResources.Add(new PlayerResourceData { 
+            resource = new ResourceData {
+                type = ResourceTypes.Gold,
+                value = startResourceValue
+            }
+         });
+
+        playerResources.Add(new PlayerResourceData { 
+            resource = new ResourceData {
+                type = ResourceTypes.Wood,
+                value = startResourceValue
+            }
+         });
+
+        playerResources.Add(new PlayerResourceData { 
+            resource = new ResourceData {
+                type = ResourceTypes.Iron,
+                value = startResourceValue
+            }
+         });
+
+        playerResources.Add(new PlayerResourceData { 
+            resource = new ResourceData {
+                type = ResourceTypes.Crystal,
+                value = startResourceValue
+            }
+         });
+
+        #endregion       
 
         #if UNITY_EDITOR
         EntityManager.SetName(player, "Player Resource Data");
@@ -65,29 +93,110 @@ public class PlayerResourceSystem : SystemBase
         }
         #endregion
 
-        if(startValueSet)
-            return;
+        // if(startValueSet)
+            // return;
 
-        startValueSet = true;
+        // startValueSet = true;
     }
 
     protected override void OnUpdate()
     {
-        // Update UI
-        
+        // Update UI  
         // THIS IS BAD
+        // THERES ONLY ONE PLAYER, NO NEED FOR ENTITIES FOREACH. Can use playerResources buffer.
+        // To-do: Refactor
+
 
         Entities
                 .WithoutBurst()
                 .ForEach(
-                    (in PlayerData player) =>
+                    (in DynamicBuffer<PlayerResourceData> resourcesData) =>
                     {
-                        SetResourceText(ResourceTypes.Gold, player.Gold);
-                        SetResourceText(ResourceTypes.Wood, player.Wood);
-                        SetResourceText(ResourceTypes.Iron, player.Iron);
-                        SetResourceText(ResourceTypes.Crystal, player.Crystal);
+                        for(int i = 0; i < resourcesData.Length; i++)
+                        {
+                            // If it's resource None type
+                            if(resourcesData[i].resource.type == ResourceTypes.None)
+                                continue;
+                            
+                            // If there is no UI text field for our resource type
+                            if(!resources.ContainsKey(resourcesData[i].resource.type))
+                                continue;
+
+                            SetResourceText(resourcesData[i].resource.type, resourcesData[i].resource.value);
+                        }
                     }
                 ).Run();
+
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
+
+            Entities
+                    .WithoutBurst()
+                    .ForEach(
+                        (Entity entity, in ResourceTransactionData transactionData) =>
+                        {
+                            if(!transactionData.isProfit)
+                                SpendResource(transactionData.type, (int) transactionData.value);
+                            else
+                                AddResource(transactionData.type, (int) transactionData.value);
+                            
+                            ecb.DestroyEntity(entity);
+                        }
+                    ).Run();
+
+            ecb.Playback(EntityManager);
+    }
+
+    private bool SpendResource(ResourceTypes type, int val)
+    {
+        bool state = false;
+
+        // To-do: Refactor
+
+        Entities
+                .WithoutBurst()
+                .ForEach(
+                    (ref DynamicBuffer<PlayerResourceData> buffer) =>
+                    {
+                        for(int i = 0; i < buffer.Length; i++)
+                        {
+                            if(buffer[i].resource.type == type)
+                            {
+                                if(ValidateSpending(buffer[i].resource.value, val))
+                                {
+                                    Debug.Log($"Spending {buffer[i].resource.value} of {buffer[i].resource.type}.");
+                                    buffer[i] = new PlayerResourceData 
+                                    {
+                                        resource = new ResourceData
+                                        {
+                                            type = buffer[i].resource.type, 
+                                            value = buffer[i].resource.value - val
+                                        }
+                                    };
+                                    state = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Exit from ForEach? We don't need something else atm                       
+                        return;
+                    }
+                ).Run();
+
+        return state;
+    }
+
+    private bool AddResource(ResourceTypes type, int val)
+    {
+        return SpendResource(type, -val);
+    }
+
+    private bool ValidateSpending(int current, int val)
+    {
+        if(val > current)
+            return false;
+        
+        return true;
     }
 
     private void SetResourceText(ResourceTypes type, int value)

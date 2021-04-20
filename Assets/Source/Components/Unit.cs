@@ -1,8 +1,9 @@
 using Unity;
 using Unity.Entities;
 
-public struct PriceData : IComponentData
+public struct ResourceTransactionData : IComponentData
 {
-    public ResourceTypes ResourceType;
-    public uint Price;
+    public ResourceTypes type;
+    public bool isProfit;
+    public uint value;
 }
