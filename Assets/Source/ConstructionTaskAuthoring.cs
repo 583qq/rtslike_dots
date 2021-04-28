@@ -27,7 +27,6 @@ public class ConstructionTaskAuthoring : MonoBehaviour, IConvertGameObjectToEnti
     private EntityManager manager;
     private Entity taskEntity;
 
-    [SerializeField] private Text[] resourceTextFields;
     [SerializeField] private UnitPriceData[] prices;
 
     private bool isConverted = false;

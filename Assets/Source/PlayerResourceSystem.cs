@@ -21,11 +21,14 @@ public class PlayerResourceSystem : SystemBase
     // UI text fields references
     public Dictionary<ResourceTypes, Text> resources;
     
+    // private EndSimulationEntityCommandBufferSystem endSimulationECBSystem;
 
     // private bool startValueSet = false;
 
     protected override void OnCreate()
     {
+        // endSimulationECBSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
+
         // Initialize our player data
         player = EntityManager.CreateEntity();
 
@@ -33,7 +36,7 @@ public class PlayerResourceSystem : SystemBase
 
         DynamicBuffer<PlayerResourceData> playerResources = EntityManager.AddBuffer<PlayerResourceData>(player);
 
-        #region Initializate player resources (buffer)
+        #region Initialize player resources (buffer)
         
         playerResources.Add(new PlayerResourceData { 
             resource = new ResourceData {
@@ -101,11 +104,9 @@ public class PlayerResourceSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        // Update UI  
-        // THIS IS BAD
-        // THERES ONLY ONE PLAYER, NO NEED FOR ENTITIES FOREACH. Can use playerResources buffer.
         // To-do: Refactor
-
+        // Without any usage of ecb atm...
+        // var parallelECB = endSimulationECBSystem.CreateCommandBuffer().AsParallelWriter();
 
         Entities
                 .WithoutBurst()
@@ -143,7 +144,8 @@ public class PlayerResourceSystem : SystemBase
                         }
                     ).Run();
 
-            ecb.Playback(EntityManager);
+
+            // endSimulationECBSystem.AddJobHandleForProducer(this.Dependency);
     }
 
     private bool SpendResource(ResourceTypes type, int val)
@@ -153,17 +155,17 @@ public class PlayerResourceSystem : SystemBase
         // To-do: Refactor
 
         Entities
-                .WithoutBurst()
                 .ForEach(
                     (ref DynamicBuffer<PlayerResourceData> buffer) =>
                     {
                         for(int i = 0; i < buffer.Length; i++)
                         {
-                            if(buffer[i].resource.type == type)
+                            if(buffer[i].resource.type == type) // Type search 
                             {
-                                if(ValidateSpending(buffer[i].resource.value, val))
+                                if(buffer[i].resource.value >= val) // Validate spending
                                 {
                                     Debug.Log($"Spending {buffer[i].resource.value} of {buffer[i].resource.type}.");
+                                    
                                     buffer[i] = new PlayerResourceData 
                                     {
                                         resource = new ResourceData
@@ -172,6 +174,7 @@ public class PlayerResourceSystem : SystemBase
                                             value = buffer[i].resource.value - val
                                         }
                                     };
+
                                     state = true;
                                     break;
                                 }
@@ -199,8 +202,8 @@ public class PlayerResourceSystem : SystemBase
         return true;
     }
 
-    private void SetResourceText(ResourceTypes type, int value)
+    private void SetResourceText(ResourceTypes type, int val)
     {
-        resources[type].text = value.ToString();
+        resources[type].text = val.ToString();
     }
 }

@@ -6,7 +6,6 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
-using Unity.Physics;
 using Unity.Rendering;
 
 using UnityEngine;
@@ -16,6 +15,12 @@ public class BuildingSystem : SystemBase
 {
     private Entity prefabSelectedNotify;
     private ConstructionTask task;
+
+    private Mesh previewMesh;
+    private Material previewMaterial;
+
+    private Material previewMaterialGreen;
+    private Material previewMaterialRed;
 
     private void GetConstructBuildingEntity()
     {
@@ -44,6 +49,20 @@ public class BuildingSystem : SystemBase
     protected override void OnStartRunning()
     {
         GetConstructBuildingEntity();
+
+        // Preview Mesh Scale
+        RenderMesh rmesh = EntityManager.GetSharedComponentData<RenderMesh>(task.previewPrefab);
+
+        previewMesh = rmesh.mesh;
+        previewMaterial = rmesh.material;
+
+        // Can place
+        previewMaterialGreen = new Material(previewMaterial);
+        previewMaterialGreen.SetColor("_Color", Color.green);
+
+        // Can't place
+        previewMaterialRed = new Material(previewMaterial);
+        previewMaterialRed.SetColor("_Color", Color.red);
     }
 
     protected override void OnStopRunning()
@@ -52,16 +71,25 @@ public class BuildingSystem : SystemBase
             EntityManager.DestroyEntity(prefabSelectedNotify);
     }
 
-    private void RenderPreview()
+    private void RenderPreview(Vector3 position)
     {
-
+        Vector3 scale = new Vector3(3, 3, 3);
+        Matrix4x4 trsMatrix = Matrix4x4.TRS(position, Quaternion.identity, scale);
+        
+        // To-do
+        bool canPlace = true;
+        
+        if(canPlace)
+            Graphics.DrawMesh(previewMesh, trsMatrix, previewMaterialGreen, 0);
+        else
+            Graphics.DrawMesh(previewMesh, trsMatrix, previewMaterialRed, 0);
     }
 
     protected override void OnUpdate()
     {
         Vector3 position = GameUtilities.MouseToTerrainPosition();
 
-        RenderPreview();
+        RenderPreview(position);
 
         if(Mouse.current.leftButton.IsPressed()) // LMouseClick
         {
@@ -70,18 +98,31 @@ public class BuildingSystem : SystemBase
             return;
         }
 
+        // To-do: Validate that both buttons aren't pressed...
+        // if so, do nothing or cancel
+
         if(Mouse.current.rightButton.IsPressed()) // RMouseClick
         {
             this.Enabled = false;
+            Cashback();
             return;
         }
+    }
+
+    private void Cashback()
+    {
+        // Return building price
+        // Struct for CashbackData (like ResourceTransactionData)
+        // Create new entities with ResourceTransactionData (from CashbackData) with isProfit flag.
+        // Then delete entities with CashbackData.
+        // Don't forget to delete these when SystemStops or in the OnUpdate
     }
     
     // Building on mouse position
     private void Build(Vector3 position)
     {   
         // Rewrite all the shit EntityManager => EntityCommandBuffer (if it could be executed not on the same frame/thread)
-        // This is structural change, so it's somewhat slow if we are building a lot
+        // This is structural change, so it's somewhat slow if we are building a lot?
 
         Entity buildingPrefab = task.buildingPrefab;
 
@@ -133,17 +174,17 @@ public class BuildingSystem : SystemBase
     }
 
     // Use when entity is attackable
-    private void SetDurability(Entity unit, uint _durability)
+    private void SetDurability(Entity unit, uint durability)
     {
         if(!isAttackable(unit))
             return;
         
         // Remark: Just set some component data, without getting component data
 
-        AttackableComponent _component = EntityManager.GetComponentData<AttackableComponent>(unit);
-        _component.durability = _durability;
+        AttackableComponent component = EntityManager.GetComponentData<AttackableComponent>(unit);
+        component.durability = durability;
 
-        SetAttackableComponent(unit, _component);
+        SetAttackableComponent(unit, component);
     }
 
     // Reset current to maximum durability
@@ -154,10 +195,10 @@ public class BuildingSystem : SystemBase
         
         // Remark: Just set some component data, without getting component data?
 
-        AttackableComponent _component = GetAttackableComponent(unit);
-        _component.current = _component.durability;
+        AttackableComponent component = GetAttackableComponent(unit);
+        component.current = component.durability;
 
-        SetAttackableComponent(unit, _component);
+        SetAttackableComponent(unit, component);
     }
 
     // Take Damage
@@ -166,20 +207,20 @@ public class BuildingSystem : SystemBase
         if(!isAttackable(unit))
             return;
 
-        AttackableComponent _component = GetAttackableComponent(unit);
+        AttackableComponent component = GetAttackableComponent(unit);
        
         uint durability_points;
 
         // Validate & Set
-        if(_component.current < damage)
+        if(component.current < damage)
             durability_points = 0;
         else
-            durability_points = _component.current - damage;
+            durability_points = component.current - damage;
         //
 
-        _component.current = durability_points;
+        component.current = durability_points;
 
-        SetAttackableComponent(unit, _component);
+        SetAttackableComponent(unit, component);
     }
 
     // Heal
@@ -188,24 +229,24 @@ public class BuildingSystem : SystemBase
         if(!isAttackable(unit))
             return;
 
-        AttackableComponent _component = GetAttackableComponent(unit);
+        AttackableComponent component = GetAttackableComponent(unit);
 
-        uint durability_points;
+        uint durabilityPoints;
 
         // if it's greater than uint.MaxValue than just SET IT to the maximum
-        if(GameUtilities.CheckUintSumOverflow(_component.current, heal))
-            durability_points = _component.durability;
+        if(GameUtilities.CheckUintSumOverflow(component.current, heal))
+            durabilityPoints = component.durability;
         else
-            durability_points = _component.current + heal; // Else Set As It Is.
+            durabilityPoints = component.current + heal; // Else Set As It Is.
 
         // Validate & Set
-        if(durability_points > _component.durability)
-            _component.current = _component.durability;
+        if(durabilityPoints > component.durability)
+            component.current = component.durability;
         else
-            _component.current = durability_points;
+            component.current = durabilityPoints;
         //
 
-        SetAttackableComponent(unit, _component);
+        SetAttackableComponent(unit, component);
     }
 
     private bool isAttackable(Entity entity) => EntityManager.HasComponent<AttackableComponent>(entity);

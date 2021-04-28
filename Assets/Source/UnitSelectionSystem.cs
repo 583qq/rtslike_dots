@@ -4,6 +4,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Transforms;
 using Unity.Rendering;
+using Unity.Jobs;
 
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -12,7 +13,7 @@ using UnityEngine.EventSystems;
 
 public class UnitSelectionSystem : SystemBase
 {
-    private bool areAnySelected = false;
+    private bool anySelected = false;
     private bool mousePressed;
     private bool mouseReleased;
     private Vector2 screenStartPosition;
@@ -30,6 +31,12 @@ public class UnitSelectionSystem : SystemBase
     private Mouse mouse;
     private EventSystem eventSystem;
 
+    private EndSimulationEntityCommandBufferSystem endSimulationECBSystem;
+
+    protected override void OnCreate()
+    {
+        endSimulationECBSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
+    }
 
     protected override void OnStartRunning()
     {
@@ -58,6 +65,8 @@ public class UnitSelectionSystem : SystemBase
 
     protected override void OnUpdate()
     {
+        var ecb = endSimulationECBSystem.CreateCommandBuffer().AsParallelWriter();
+
         // If you are over UI elements you can't select
         if(eventSystem.IsPointerOverGameObject())
             return;
@@ -93,19 +102,29 @@ public class UnitSelectionSystem : SystemBase
 
 
             Debug.Log($"Trying to select: {bottomLeft} => {topRight}");
-            HandleUnitSelection(bottomLeft, topRight);
+            HandleUnitSelection(bottomLeft, topRight, ecb);
         }
 
         // Deselection Logic
-        if(areAnySelected && mouse.rightButton.IsPressed())
-            Deselect();
+        if(anySelected && mouse.rightButton.IsPressed())
+            DeselectUnits(ecb);
+
+
+        endSimulationECBSystem.AddJobHandleForProducer(this.Dependency);
     }
 
-    private void Deselect()
+    private void DeselectUnits(EntityCommandBuffer.ParallelWriter ecb)
     {
-        areAnySelected = false;
+        anySelected = false;
 
         // Deselection Logic
+        Entities
+                .ForEach(
+                    (Entity entity, int entityInQueryIndex, in UnitSelectedTag tag) =>
+                    {
+                        ecb.RemoveComponent<UnitSelectedTag>(entityInQueryIndex, entity);
+                    }
+                ).ScheduleParallel();
     }
 
     private void UpdateBoxSelectionArea()
@@ -144,12 +163,12 @@ public class UnitSelectionSystem : SystemBase
                                              screenMaxAnchor.y - screenMinAnchor.y);
     }
 
-    private void HandleUnitSelection(float3 minAnchor, float3 maxAnchor)
+    private void HandleUnitSelection(float3 minAnchor, float3 maxAnchor, EntityCommandBuffer.ParallelWriter ecb)
     {
         Entities
                 .WithAll<SelectableTag>()
                 .ForEach(
-                    (Entity entity, in Translation translation) =>
+                    (Entity entity, int entityInQueryIndex, in Translation translation) =>
                     {
                         float3 position = translation.Value;
 
@@ -159,11 +178,10 @@ public class UnitSelectionSystem : SystemBase
                            position.z <= maxAnchor.z)
                            {                               
                                Debug.Log($"Selected: {entity} ({position})");
-                               // Add selected entities into native array?
-                               // Or add selected component?
+        
+                               ecb.AddComponent<UnitSelectedTag>(entityInQueryIndex, entity);
                            }
-                    }
-                ).ScheduleParallel();
+                    }).ScheduleParallel(); 
     }
 
 }
