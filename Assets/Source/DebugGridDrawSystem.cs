@@ -6,6 +6,8 @@ using Unity.Entities;
 using UnityEngine;
 
 
+namespace Game
+{
 public class DebugGridDrawSystem : SystemBase
 {
     private int gridSize = 128;
@@ -19,4 +21,5 @@ public class DebugGridDrawSystem : SystemBase
             Debug.DrawLine(new Vector3(0, gridHeight, i), new Vector3(gridSize, gridHeight, i), Color.green);
         }   
     }
+}
 }

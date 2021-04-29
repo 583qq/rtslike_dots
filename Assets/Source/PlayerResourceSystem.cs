@@ -12,6 +12,8 @@ using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.UI;
 
+namespace Game 
+{
 public class PlayerResourceSystem : SystemBase
 {
     public int startResourceValue = 100;
@@ -28,15 +30,16 @@ public class PlayerResourceSystem : SystemBase
     protected override void OnCreate()
     {
         // endSimulationECBSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
+        var ecb = new EntityCommandBuffer(Allocator.Temp);
 
         // Initialize our player data
-        player = EntityManager.CreateEntity();
+        player = ecb.CreateEntity();
 
         resources = new Dictionary<ResourceTypes, Text>();  // UI textfield mapping
 
-        DynamicBuffer<PlayerResourceData> playerResources = EntityManager.AddBuffer<PlayerResourceData>(player);
+        DynamicBuffer<PlayerResourceData> playerResources = ecb.AddBuffer<PlayerResourceData>(player);
 
-        EntityManager.AddComponent<PlayerTag>(player);
+        ecb.AddComponent<PlayerTag>(player);
 
         #region Initialize player resources (buffer)
         
@@ -73,6 +76,8 @@ public class PlayerResourceSystem : SystemBase
         #if UNITY_EDITOR
         EntityManager.SetName(player, "Player Resource Data");
         #endif
+
+        ecb.Playback(EntityManager);
     }
 
     protected override void OnStartRunning()
@@ -208,4 +213,6 @@ public class PlayerResourceSystem : SystemBase
     {
         resources[type].text = val.ToString();
     }
+}
+
 }

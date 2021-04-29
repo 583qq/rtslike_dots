@@ -10,7 +10,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 
-
+namespace Game
+{
 public class UnitSelectionSystem : SystemBase
 {
     private bool anySelected = false;
@@ -184,4 +185,5 @@ public class UnitSelectionSystem : SystemBase
                     }).ScheduleParallel(); 
     }
 
+}
 }

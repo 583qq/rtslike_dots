@@ -10,7 +10,8 @@ using Unity.Rendering;
 
 using UnityEngine;
 
-
+namespace Game
+{
 public class BuildingSystemAdapter : MonoBehaviour
 {
     private EntityManager manager;
@@ -48,4 +49,6 @@ public class BuildingSystemAdapter : MonoBehaviour
     {
         world.GetExistingSystem<BuildingSystem>().Enabled = false;
     }
+}
+
 }

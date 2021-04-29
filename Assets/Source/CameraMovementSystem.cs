@@ -8,13 +8,9 @@ using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-//*******************************
-// 
-// Camera System (Input? Haha)
-// 'Input' isn't right...
-// 
-//*******************************
 
+namespace Game
+{
 public class CameraMovementSystem : SystemBase
 {
     private InputControls controls;
@@ -200,5 +196,7 @@ public class CameraMovementSystem : SystemBase
             playerView.fieldOfView = camFOVminimum; 
     }
 
+
+}
 
 }

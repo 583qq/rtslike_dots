@@ -8,7 +8,8 @@ using Unity.Transforms;
 using UnityEngine;
 
 
-
+namespace Game
+{
 public class UnitSystem : SystemBase
 {
     protected override void OnStartRunning()
@@ -19,4 +20,5 @@ public class UnitSystem : SystemBase
     {
         //
     }
+}
 }

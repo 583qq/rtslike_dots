@@ -11,6 +11,8 @@ using Unity.Rendering;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+namespace Game
+{
 public class BuildingSystem : SystemBase
 {
     private Entity prefabSelectedNotify;
@@ -252,4 +254,6 @@ public class BuildingSystem : SystemBase
     private bool isAttackable(Entity entity) => EntityManager.HasComponent<AttackableComponent>(entity);
     private AttackableComponent GetAttackableComponent(Entity entity) => EntityManager.GetComponentData<AttackableComponent>(entity);
     private void SetAttackableComponent(Entity entity, AttackableComponent c) => EntityManager.SetComponentData<AttackableComponent>(entity, c);
+}
+
 }

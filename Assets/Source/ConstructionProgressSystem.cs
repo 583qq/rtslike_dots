@@ -2,6 +2,8 @@ using Unity;
 using Unity.Entities;
 
 
+namespace Game
+{
 public class ConstructionProgressSystem : SystemBase
 {
     private double nextWorkUpdate = 0.0f;
@@ -46,4 +48,4 @@ public class ConstructionProgressSystem : SystemBase
 
 }
 
-
+}

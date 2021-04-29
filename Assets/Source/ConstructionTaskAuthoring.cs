@@ -8,6 +8,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
+namespace Game 
+{
 [DisallowMultipleComponent]
 [AddComponentMenu("Gameplay Feature/Unit/Buildings/Construct Building Task")]
 [ConverterVersion("NoWayRage", 1)]
@@ -132,3 +134,5 @@ public struct EntityReference : IComponentData
 }
 
 public struct ResourceSpendingTransaction : IComponentData { }
+
+}

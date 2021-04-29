@@ -1,9 +1,11 @@
 using Unity;
-using Unity.Entities;
 using Unity.Collections;
-using UnityEngine;
 
-using Unity.Assertions;
+using Unity.Entities;
+
+using UnityEngine;
+using UnityEngine.TestTools;
+using NUnit.Framework;
 
 namespace Game.Tests
 {
@@ -11,9 +13,10 @@ namespace Game.Tests
     {
         public const int startResourceValue = 100;
 
+        [Test]
         public void InitResourcesCase()
         {
-            World testWorld = new World("ResourceTestWorld", WorldFlags.Simulation);
+            World testWorld = new World("ResourceTestWorld", WorldFlags.Live);
             var resourceSystem = testWorld.CreateSystem<PlayerResourceSystem>();
 
             // NativeArray
