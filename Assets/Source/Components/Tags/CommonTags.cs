@@ -10,3 +10,5 @@ public struct PrefabTag : IComponentData {}
 public struct SelectableTag : IComponentData {}
 
 public struct UnitSelectedTag : IComponentData {}
+
+public struct PlayerTag : IComponentData {}

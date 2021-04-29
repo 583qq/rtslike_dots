@@ -36,6 +36,8 @@ public class PlayerResourceSystem : SystemBase
 
         DynamicBuffer<PlayerResourceData> playerResources = EntityManager.AddBuffer<PlayerResourceData>(player);
 
+        EntityManager.AddComponent<PlayerTag>(player);
+
         #region Initialize player resources (buffer)
         
         playerResources.Add(new PlayerResourceData { 
