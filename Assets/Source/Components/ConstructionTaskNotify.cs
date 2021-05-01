@@ -13,7 +13,6 @@ public struct ConstructionTaskNotify : IComponentData
     public Entity task;
 }
 
-public struct ConstructionTaskNotifyTag : IComponentData {}
 
 public struct BuildingTag : IComponentData
 {
@@ -27,7 +26,7 @@ public struct BuildingConstructionComponent : IComponentData
     public uint workCurrent;
     public bool isDone;
 }
-// when isDone => Delete comopnent from entity
+// when isDone => Delete comopnent from entity ?
 
 
 // Any Unit that can be damaged
@@ -37,16 +36,3 @@ public struct AttackableComponent : IComponentData
     public uint current;
 }
 //
-
-enum UnitPrice
-{
-    Gold,
-    Wood,
-    Stone
-}
-
-public struct UnitPriceComponent : IComponentData
-{
-    public uint price;
-    public uint price_type;  // UnitPrice
-}

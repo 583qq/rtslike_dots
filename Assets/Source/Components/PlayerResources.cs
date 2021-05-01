@@ -10,6 +10,8 @@ public enum ResourceTypes
     Crystal   
 }
 
+
+// Update capacity?
 [InternalBufferCapacity(4)]
 public struct PlayerResourceData : IBufferElementData
 {

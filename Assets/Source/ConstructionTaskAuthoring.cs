@@ -27,6 +27,9 @@ public class ConstructionTaskAuthoring : MonoBehaviour, IConvertGameObjectToEnti
     // Authoring Script
     private World world;
     private EntityManager manager;
+    private PlayerResourceSystem playerResourceSystem;
+    private BuildingSystem buildingSystem;
+
     private Entity taskEntity;
 
     [SerializeField] private UnitPriceData[] prices;
@@ -37,6 +40,18 @@ public class ConstructionTaskAuthoring : MonoBehaviour, IConvertGameObjectToEnti
     {
         world = World.DefaultGameObjectInjectionWorld;
         manager = world.EntityManager; 
+        
+        buildingSystem = world.GetExistingSystem<BuildingSystem>();
+        playerResourceSystem = world.GetExistingSystem<PlayerResourceSystem>();
+    }
+
+    void Awake()
+    {
+        // if(playerResourceSystem == null)
+        //     Debug.Log("PlayerResourceSystem is null!");
+
+        // if(buildingSystem == null)
+        //     Debug.Log("BuildingSystem is null!");
     }
 
     // Should be converted one time in the GameObjectConversionGroup
@@ -67,48 +82,27 @@ public class ConstructionTaskAuthoring : MonoBehaviour, IConvertGameObjectToEnti
         if(!isConverted)
             return;
 
-        Dictionary<ResourceTypes, Text> res = world.GetExistingSystem<PlayerResourceSystem>().resources;
-
-        // Check if one of our resources lower than price
+        // Refactor this & validate resource spending (send array)
         foreach(var price in prices)
         {
-            if(Int32.Parse(res[price.type].text) < price.value)
+            bool validationStatus = playerResourceSystem.ValidateResourceSpending(price.type, (int) price.value);
+
+            if(!validationStatus)
             {
-                Debug.Log($"Not enough {price.type}.");
+                Debug.Log($"Not enough {price.type}!");
                 return;
             }
         }
-        
-        #region Resource spending transaction tasks
-        foreach(var price in prices)
-        {
-            var transactionEntity = manager.CreateEntity();
-            
-            #if UNITY_EDITOR
-            manager.SetName(transactionEntity, "Resource Transaction Task");
-            #endif
 
-            // Our prefab-placemenet task
-            manager.AddComponentData<EntityReference>(transactionEntity, new EntityReference
-            {
-                reference = taskEntity
-            });
-
-            // Our transaction data
-            manager.AddComponentData<ResourceTransactionData>(transactionEntity, new ResourceTransactionData
-            {
-                type = price.type,
-                isProfit = false,
-                value = price.value
-            });
-        }
-        #endregion
+        buildingSystem.SetBuildingPrice(prices);
 
         Debug.Log($"Construction Task Notify: {taskEntity}");
 
         var notify = manager.CreateEntity(typeof(ConstructionTaskNotify));
         manager.AddComponentData<ConstructionTaskNotify>(notify, new ConstructionTaskNotify
-        { task = taskEntity });
+        { 
+            task = taskEntity 
+        });
     }
 }
 
@@ -133,6 +127,5 @@ public struct EntityReference : IComponentData
     public Entity reference;
 }
 
-public struct ResourceSpendingTransaction : IComponentData { }
 
 }

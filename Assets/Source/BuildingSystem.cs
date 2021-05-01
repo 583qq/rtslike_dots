@@ -24,6 +24,35 @@ public class BuildingSystem : SystemBase
     private Material previewMaterialGreen;
     private Material previewMaterialRed;
 
+    private GridSystem gridSystem;
+    private PlayerResourceSystem playerResourceSystem;
+
+    private UnitPriceData[] prices;
+
+    protected override void OnCreate()
+    {
+        gridSystem = World.GetExistingSystem<GridSystem>();
+        playerResourceSystem = World.GetExistingSystem<PlayerResourceSystem>();
+    }
+
+    public void SetBuildingPrice(UnitPriceData[] prices)
+    {
+        this.prices = prices;
+    }
+
+    private void SpendResources()
+    {
+        foreach(var price in prices)
+        {
+            bool validationStatus = playerResourceSystem.ValidateResourceSpending(price.type, (int) price.value);
+
+            if(!validationStatus)
+                return;
+
+            playerResourceSystem.SpendResource(price.type, (int) price.value);  
+        }
+    }
+
     private void GetConstructBuildingEntity()
     {
         // Building to Construct Tag => Reference Component
@@ -73,13 +102,10 @@ public class BuildingSystem : SystemBase
             EntityManager.DestroyEntity(prefabSelectedNotify);
     }
 
-    private void RenderPreview(Vector3 position)
+    private void RenderPreview(Vector3 position, bool canPlace)
     {
         Vector3 scale = new Vector3(3, 3, 3);
         Matrix4x4 trsMatrix = Matrix4x4.TRS(position, Quaternion.identity, scale);
-        
-        // To-do
-        bool canPlace = true;
         
         if(canPlace)
             Graphics.DrawMesh(previewMesh, trsMatrix, previewMaterialGreen, 0);
@@ -91,12 +117,28 @@ public class BuildingSystem : SystemBase
     {
         Vector3 position = GameUtilities.MouseToTerrainPosition();
 
-        RenderPreview(position);
+        Vector2 gridPosition = gridSystem.WorldToGrid(position);
+
+        bool isEmpty = gridSystem.IsEmpty((int) gridPosition.x, (int) gridPosition.y);
+
+        // Debug.Log($"{isEmpty} : {gridPosition}");
+
+        Vector3 gridWorldPosition = gridSystem.CellToWorld(gridPosition);
+
+        // Debug.Log($"P: {position} => {gridWorldPosition}");
+
+        RenderPreview(gridWorldPosition, isEmpty);
 
         if(Mouse.current.leftButton.IsPressed()) // LMouseClick
         {
+            if(!isEmpty)
+            {
+                Debug.Log("Cell is not empty!");
+                return;
+            }
+
             this.Enabled = false;
-            Build(position);
+            Build(gridWorldPosition, gridPosition);
             return;
         }
 
@@ -106,23 +148,17 @@ public class BuildingSystem : SystemBase
         if(Mouse.current.rightButton.IsPressed()) // RMouseClick
         {
             this.Enabled = false;
-            Cashback();
             return;
         }
     }
-
-    private void Cashback()
-    {
-        // Return building price
-        // Struct for CashbackData (like ResourceTransactionData)
-        // Create new entities with ResourceTransactionData (from CashbackData) with isProfit flag.
-        // Then delete entities with CashbackData.
-        // Don't forget to delete these when SystemStops or in the OnUpdate
-    }
     
     // Building on mouse position
-    private void Build(Vector3 position)
+    private void Build(Vector3 position, Vector2 gridPosition)
     {   
+        SpendResources();
+
+        gridSystem.Fill((int) gridPosition.x, (int) gridPosition.y, Cell.Filled);
+
         // Rewrite all the shit EntityManager => EntityCommandBuffer (if it could be executed not on the same frame/thread)
         // This is structural change, so it's somewhat slow if we are building a lot?
 

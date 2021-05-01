@@ -4,12 +4,14 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
+        "Game",
         "Unity.Entities",
         "Unity.Jobs",
+        "Unity.Transforms",
+        "Unity.Collections",
         "Unity.Mathematics",
         "Unity.Rendering.Hybrid",
-        "Unity.Burst",
-        "Game"
+        "Unity.Burst"
     ],
     "includePlatforms": [
         "Editor"
