@@ -6,29 +6,29 @@ using Unity.Entities;
 
 using UnityEngine;
 
-public interface ISkillImplementation
+
+public struct AbilityEffectBuffer : IBufferElementData
 {
-    void Cast(Entity entity);
+    public AbilityEffect effect;
 }
 
-public interface ISkillEffect 
+public struct AbilityEffect : ISharedComponentData
 {
-    SkillEffectTarget target_type { get; set; }
+    public AbilityTargetType targetType;
+    public float baseDamageMinimum;
+    public float baseDamageMaximum;
+    
+    // Animation
 }
 
-public interface ISkillCost 
-{
-    SkillCost cost {get; set;}
-}
-
-public enum SkillEffectTarget
+public enum AbilityTargetType
 {
     Target,
     Area,
     Self
 }
 
-public enum SkillState
+public enum AbilityState
 {
     Passive,
     Active,
@@ -36,17 +36,33 @@ public enum SkillState
     Casting
 }
 
-public struct SkillCost
+public enum DamageType
 {
-
+    Physical,
+    Fire,
+    Frost,
+    Arcane,
+    Chaos
 }
 
-public struct SkillTime
+public enum AbilityCostType
+{
+    Mana,
+    Energy
+}
+
+public struct AbilityCost
+{
+    public AbilityCostType type;
+    public int value;
+}
+
+public struct AbilityTime
 {
     public readonly float origin;
     public float current;
 
-    public SkillTime(float val)
+    public AbilityTime(float val)
     {
         origin = val;
         current = origin;
@@ -68,29 +84,13 @@ public struct SkillTime
     }
 }
 
-public struct SkillRange
+public struct UnitAbility
 {
-
-}
-
-public struct UnitSkill
-{
-    public SkillState state {get; set;}
-    public SkillTime cooldown;
-    public SkillTime castTime;
-    public SkillRange range;
+    public AbilityState state {get; set;}
+    public AbilityTime cooldown;
+    public AbilityTime castTime;
+    public Range range;
     public bool inRange;
     public bool areResourcesEnough;
 
-}
-
-[System.Serializable]
-public struct BasicAttackProjectile : ISkillEffect
-{
-    public SkillEffectTarget target_type {get; set; }
-
-    public void Cast(Entity entity)
-    {
-
-    }
 }

@@ -12,3 +12,6 @@ public struct SelectableTag : IComponentData {}
 public struct UnitSelectedTag : IComponentData {}
 
 public struct PlayerTag : IComponentData {}
+
+
+public struct AbilityTag : IComponentData {}

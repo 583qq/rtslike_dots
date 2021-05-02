@@ -11,8 +11,6 @@ public enum ResourceTypes
 }
 
 
-// Update capacity?
-[InternalBufferCapacity(4)]
 public struct PlayerResourceData : IBufferElementData
 {
     public ResourceData resource;

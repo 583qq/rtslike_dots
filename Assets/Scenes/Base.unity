@@ -735,7 +735,7 @@ MonoBehaviour:
   buildingPrefab: {fileID: 1058440869475206, guid: cf764b534da372e4d822d7cc4fa3e676, type: 3}
   previewPrefab: {fileID: 1058440869475206, guid: cf764b534da372e4d822d7cc4fa3e676, type: 3}
   isAttackable: 1
-  constructionTime: 90
+  constructionTime: 150
   durability: 500
   prices:
   - type: 4
