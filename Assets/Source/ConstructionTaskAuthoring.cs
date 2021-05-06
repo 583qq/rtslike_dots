@@ -1,4 +1,5 @@
 using Unity;
+using Unity.Collections;
 using Unity.Entities;
 
 using System;
@@ -16,12 +17,14 @@ namespace Game
 public class ConstructionTaskAuthoring : MonoBehaviour, IConvertGameObjectToEntity, IDeclareReferencedPrefabs
 {
     // Component Data
-    public GameObject buildingPrefab;
-    public GameObject previewPrefab;
-    public bool isAttackable;
-    [Range(0, 300)]
-    public uint constructionTime;
-    public uint durability;
+    // public GameObject buildingPrefab;
+    // public GameObject previewPrefab;
+    // public bool isAttackable;
+    // [Range(0, 300)]
+    // public uint constructionTime;
+    // public uint durability;
+
+    public ConstructionTaskObject building;
 
 
     // Authoring Script
@@ -32,7 +35,9 @@ public class ConstructionTaskAuthoring : MonoBehaviour, IConvertGameObjectToEnti
 
     private Entity taskEntity;
 
-    [SerializeField] private UnitPriceData[] prices;
+    private UnitPriceData[] prices;
+
+    [SerializeField] private UnitTaskObject[] units;
 
     private bool isConverted = false;
 
@@ -57,14 +62,16 @@ public class ConstructionTaskAuthoring : MonoBehaviour, IConvertGameObjectToEnti
     // Should be converted one time in the GameObjectConversionGroup
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
-        ConstructionTask _task = default(ConstructionTask);
-        _task.buildingPrefab = conversionSystem.GetPrimaryEntity(buildingPrefab);
-        _task.previewPrefab = conversionSystem.GetPrimaryEntity(previewPrefab);
-        _task.isAttackable = isAttackable;
-        _task.constructionTime = constructionTime;
-        _task.durability = durability;
+        ConstructionTask task = default(ConstructionTask);
+        task.buildingPrefab = conversionSystem.GetPrimaryEntity(building.buildingPrefab);
+        task.previewPrefab = conversionSystem.GetPrimaryEntity(building.previewPrefab);
+        task.isAttackable = building.isAttackable;
+        task.constructionTime = building.constructionTime;
+        task.durability = building.durability;
 
-        dstManager.AddComponentData(entity, _task);
+        prices = building.prices;
+
+        dstManager.AddComponentData(entity, task);
 
         isConverted = true;
 
@@ -73,8 +80,8 @@ public class ConstructionTaskAuthoring : MonoBehaviour, IConvertGameObjectToEnti
 
     public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
     {
-        referencedPrefabs.Add(buildingPrefab);
-        referencedPrefabs.Add(previewPrefab);
+        referencedPrefabs.Add(building.buildingPrefab);
+        referencedPrefabs.Add(building.previewPrefab);
     }
     
     public void Construction()
@@ -90,6 +97,7 @@ public class ConstructionTaskAuthoring : MonoBehaviour, IConvertGameObjectToEnti
             if(!validationStatus)
             {
                 Debug.Log($"Not enough {price.type}!");
+                buildingSystem.Enabled = false;
                 return;
             }
         }
@@ -113,6 +121,23 @@ public struct ConstructionTask : IComponentData
     public bool isAttackable;
     public uint constructionTime;
     public uint durability;
+}
+
+
+public struct SpawnableUnitAsset
+{
+    public BlobString name;
+    public Entity prefab;
+    // Tags
+    public bool isAttackable;
+    public bool isHero;
+    public bool isRanged;
+    //
+    public uint spawnTime;
+    // Stats
+    public float health;
+    public DamageType damageType;
+    public Range baseDamage;
 }
 
 [System.Serializable]

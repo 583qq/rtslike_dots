@@ -77,6 +77,12 @@ public class BuildingSystem : SystemBase
         EntityManager.DestroyEntity(notify);
     }
 
+    protected override void OnStopRunning()
+    {
+        if(EntityManager.Exists(prefabSelectedNotify))
+            EntityManager.DestroyEntity(prefabSelectedNotify);
+    }
+
     protected override void OnStartRunning()
     {
         GetConstructBuildingEntity();
@@ -89,17 +95,11 @@ public class BuildingSystem : SystemBase
 
         // Can place
         previewMaterialGreen = new Material(previewMaterial);
-        previewMaterialGreen.SetColor("_Color", Color.green);
+        previewMaterialGreen.SetColor("_BaseColor", Color.green);   // _Color without Lit?
 
         // Can't place
         previewMaterialRed = new Material(previewMaterial);
-        previewMaterialRed.SetColor("_Color", Color.red);
-    }
-
-    protected override void OnStopRunning()
-    {
-        if(EntityManager.Exists(prefabSelectedNotify))
-            EntityManager.DestroyEntity(prefabSelectedNotify);
+        previewMaterialRed.SetColor("_BaseColor", Color.red);
     }
 
     private void RenderPreview(Vector3 position, bool canPlace)

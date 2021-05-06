@@ -27,12 +27,3 @@ public struct BuildingConstructionComponent : IComponentData
     public bool isDone;
 }
 // when isDone => Delete comopnent from entity ?
-
-
-// Any Unit that can be damaged
-public struct AttackableComponent : IComponentData
-{
-    public uint durability;
-    public uint current;
-}
-//

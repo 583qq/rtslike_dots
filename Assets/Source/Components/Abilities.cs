@@ -12,20 +12,37 @@ public struct AbilityEffectBuffer : IBufferElementData
     public AbilityEffect effect;
 }
 
-public struct AbilityEffect : ISharedComponentData
+public struct AbilityUsed : IComponentData
 {
-    public AbilityTargetType targetType;
-    public float baseDamageMinimum;
-    public float baseDamageMaximum;
-    
-    // Animation
+    public AbilityEffect effect;
 }
 
-public enum AbilityTargetType
+[Serializable]
+public struct AbilityEffect
+{
+    public AbilityEffectType effectType;
+    public bool isHealing;
+    public float baseValueMin;
+    public float baseValueMax;
+    
+    // Animation
+    // > Cast/Apply/Use
+    // > Mid Point (projectile)
+    // > Impact 
+}
+
+public enum AbilityEffectType
 {
     Target,
+    Projectile,
+    ProjectileNonTarget,
     Area,
     Self
+}
+
+public struct AbilityTarget : IComponentData
+{
+    public Entity target;
 }
 
 public enum AbilityState
@@ -45,15 +62,9 @@ public enum DamageType
     Chaos
 }
 
-public enum AbilityCostType
-{
-    Mana,
-    Energy
-}
-
 public struct AbilityCost
 {
-    public AbilityCostType type;
+    public UnitEnergyType type;
     public int value;
 }
 
@@ -91,6 +102,4 @@ public struct UnitAbility
     public AbilityTime castTime;
     public Range range;
     public bool inRange;
-    public bool areResourcesEnough;
-
 }

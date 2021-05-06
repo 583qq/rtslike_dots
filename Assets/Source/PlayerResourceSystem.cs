@@ -20,16 +20,16 @@ public class PlayerResourceSystem : SystemBase
 
     private Entity player;
     
+
     // UI text fields references (Can use ConcurrentDictionary?)
     public Dictionary<ResourceTypes, Text> resources;
     
-    // private EndSimulationEntityCommandBufferSystem endSimulationECBSystem;
+    private EndSimulationEntityCommandBufferSystem endSimulationECBSystem;
 
-    // private bool startValueSet = false;
 
     protected override void OnCreate()
     {
-        // endSimulationECBSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
+        endSimulationECBSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
         var ecb = new EntityCommandBuffer(Allocator.Temp);
 
         // Initialize our player data
@@ -95,11 +95,6 @@ public class PlayerResourceSystem : SystemBase
             resources.Add(typeTag.ResourceType, textField);
         }
         #endregion
-
-        // if(startValueSet)
-            // return;
-
-        // startValueSet = true;
     }
 
     protected override void OnUpdate()
@@ -129,13 +124,12 @@ public class PlayerResourceSystem : SystemBase
                     }
                 ).Run();
 
-
-            // endSimulationECBSystem.AddJobHandleForProducer(this.Dependency);
     }
 
     public bool ValidateResourceSpending(ResourceTypes type, int val)
     {
         bool check = true;
+        // Race condition? Leak?
 
         Entities
                 .ForEach(
@@ -153,12 +147,14 @@ public class PlayerResourceSystem : SystemBase
                     }
                 ).Run();
 
-
         return check;
     }
 
     public void SpendResource(ResourceTypes types, int val)
     {
+        // Race condition? Leak? JobTempAlloc?
+        // var ecbParallel = endSimulationECBSystem.CreateCommandBuffer().AsParallelWriter();
+
         Entities
                 .ForEach(
                     (ref DynamicBuffer<PlayerResourceData> buffer) =>
@@ -173,7 +169,10 @@ public class PlayerResourceSystem : SystemBase
                                     }
                                 };
                     }
-                ).Run();
+                ).ScheduleParallel();
+
+
+        this.CompleteDependency();
     }
 
     public void AddResource(ResourceTypes type, int val)

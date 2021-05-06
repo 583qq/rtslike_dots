@@ -14,6 +14,8 @@ public class ScriptableAbility : ScriptableObject
 
     public float cooldown;
     public float castTime;
+
+    public AbilityEffect effect;
 }
 
 

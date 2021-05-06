@@ -30,7 +30,7 @@ public class GridSystem : SystemBase
     public bool IsFilled(int x, int y) =>  (grid[x * width + y] != Cell.Empty) ? true : false; 
     public void Fill(int x, int y, Cell val) => grid[x * width + y] = val;
 
-    // Should I use simple arrays?
+    // Should I use 2d array?
     NativeArray<Cell> grid;
 
     protected override void OnCreate()

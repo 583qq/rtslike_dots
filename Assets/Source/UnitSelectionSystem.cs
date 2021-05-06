@@ -101,12 +101,14 @@ public class UnitSelectionSystem : SystemBase
             }
             #endregion
 
+            Debug.Log($"Deselection...");
+            DeselectUnits(ecb);
 
             Debug.Log($"Trying to select: {bottomLeft} => {topRight}");
             HandleUnitSelection(bottomLeft, topRight, ecb);
         }
 
-        // Deselection Logic
+        // Deselection Logic (change it when implementing movement)
         if(anySelected && mouse.rightButton.IsPressed())
             DeselectUnits(ecb);
 
